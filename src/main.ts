@@ -3,10 +3,14 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { CustomLogger } from './common/logger/custom.logger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
   const configService = app.get<ConfigService>(ConfigService);
+
+  // Logger 설정
+  app.useLogger(new CustomLogger());
 
   // Swagger 설정
   const config = new DocumentBuilder()

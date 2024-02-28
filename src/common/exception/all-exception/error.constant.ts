@@ -45,6 +45,22 @@ export const ERROR: { [key: string]: ErrorObject } = {
     message: '선생님만 학교를 생성할 수 있습니다',
     httpStatus: HttpStatus.FORBIDDEN,
   },
+  SCHOOL_NOT_FOUND: {
+    code: 'SCHOOL_NOT_FOUND',
+    message: '학교를 찾을 수 없습니다',
+    httpStatus: HttpStatus.NOT_FOUND,
+  },
+  SCHOOL_MEMBER_NOT_FOUND: {
+    code: 'SCHOOL_MEMBER_NOT_FOUND',
+    message: '학교 멤버를 찾을 수 없습니다',
+    httpStatus: HttpStatus.NOT_FOUND,
+  },
+  // 소식을 작성할 권한이 없습니다
+  SCHOOL_PERMISSION_CHECK: {
+    code: 'SCHOOL_PERMISSION_CHECK',
+    message: '소식을 작성할 권한이 없습니다',
+    httpStatus: HttpStatus.FORBIDDEN,
+  },
 };
 
 export const isErrorObject = (obj: any): obj is ErrorObject => {

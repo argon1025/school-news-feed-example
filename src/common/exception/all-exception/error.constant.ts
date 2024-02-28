@@ -27,6 +27,24 @@ export const ERROR: { [key: string]: ErrorObject } = {
     message: '잘못된 파라미터 입니다',
     httpStatus: HttpStatus.BAD_REQUEST,
   },
+
+  /**
+   * 유저 에러
+   */
+  USER_NOT_FOUND: {
+    code: 'USER_NOT_FOUND',
+    message: '유저를 찾을 수 없습니다',
+    httpStatus: HttpStatus.NOT_FOUND,
+  },
+
+  /**
+   * 학교 에러
+   */
+  SCHOOL_CREATE_TEACHER_ONLY: {
+    code: 'SCHOOL_CREATE_TEACHER_ONLY',
+    message: '선생님만 학교를 생성할 수 있습니다',
+    httpStatus: HttpStatus.FORBIDDEN,
+  },
 };
 
 export const isErrorObject = (obj: any): obj is ErrorObject => {

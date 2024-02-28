@@ -8,6 +8,7 @@ import { AllExceptionFilter } from './common/exception/all-exception/all-excepti
 import GenerateValidationException from './common/exception/validation-exception/validation-exception.factory';
 import { UserModule } from './user/user.module';
 import { SchoolModule } from './school/school.module';
+import { SchoolNewsModule } from './school-news/school-news.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { SchoolModule } from './school/school.module';
     }),
     UserModule,
     SchoolModule,
+    SchoolNewsModule,
   ],
   controllers: [AppController],
   providers: [

@@ -7,6 +7,7 @@ import { HttpLoggerMiddleware } from './common/middleware/http-logger/http-logge
 import { AllExceptionFilter } from './common/exception/all-exception/all-exception.filter';
 import GenerateValidationException from './common/exception/validation-exception/validation-exception.factory';
 import { UserModule } from './user/user.module';
+import { SchoolModule } from './school/school.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { UserModule } from './user/user.module';
       envFilePath: `environments/.env.${process.env.NODE_ENV || 'local'}`,
     }),
     UserModule,
+    SchoolModule,
   ],
   controllers: [AppController],
   providers: [

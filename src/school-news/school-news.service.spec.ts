@@ -598,5 +598,51 @@ describe('SchoolNewsService', () => {
       // then
       await expect(failCase).rejects.toThrow(new NotFoundException(ERROR.SCHOOL_NEWS_NOT_FOUND));
     });
+
+    it('삭제된 소식을 삭제할 경우', async () => {
+      // given
+      // 테스트 계정 생성
+      const user = await prismaRepository.user.create({
+        data: {
+          name: '홍길동',
+          role: UserRoleType.TEACHER,
+        },
+      });
+      // 테스트 학교 생성
+      const school = await prismaRepository.school.create({
+        data: {
+          name: '테스트학교',
+          region: SchoolRegionType.BUSAN,
+          schoolMemberList: {
+            create: {
+              userId: user.id,
+              nickname: '학교장홍길동',
+              role: SchoolUserRole.TEACHER,
+            },
+          },
+        },
+      });
+      // 삭제된 테스트 소식 생성
+      const schoolMember = await prismaRepository.schoolMember.findFirst({ where: { userId: user.id } });
+      const schoolNews = await prismaRepository.schoolNews.create({
+        data: {
+          title: '테스트 소식',
+          content: '테스트 소식 내용',
+          schoolId: school.id,
+          schoolMemberId: schoolMember.id,
+          deletedAt: new Date(),
+        },
+      });
+
+      // when
+      // 삭제된 소식을 삭제할 경우
+      const failCase = schoolNewsService.delete({
+        userId: user.id,
+        id: schoolNews.id,
+      });
+
+      // then
+      await expect(failCase).rejects.toThrow(new NotFoundException(ERROR.SCHOOL_NEWS_NOT_FOUND));
+    });
   });
 });

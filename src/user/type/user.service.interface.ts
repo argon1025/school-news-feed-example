@@ -6,6 +6,9 @@ export const USER_SERVICE = Symbol('USER_SERVICE');
 export interface UserServiceBase {
   /** 유저 생성 */
   create(options: CreateOptions): Promise<CreateResult>;
+
+  /** 유저 조회 */
+  findOne(options: FindOneOptions): Promise<FindOneResult>;
 }
 
 /** 유저 생성 옵션 */
@@ -28,4 +31,20 @@ export enum UserRoleType {
   STUDENT = 'STUDENT',
   /** 선생님 */
   TEACHER = 'TEACHER',
+}
+
+/** 유저 조회 */
+export interface FindOneOptions {
+  /** 유저 ID */
+  id: string;
+}
+
+/** 유저 조회 결과 */
+export interface FindOneResult {
+  /** 유저 ID */
+  id: string;
+  /** 이름 */
+  name: string;
+  /** 유저 역할 */
+  role: UserRoleType;
 }

@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { InternalServerErrorException, Logger } from '@nestjs/common';
+import { InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaRepository } from '../common/prisma/prisma.repository';
 import { CreateOptions, USER_SERVICE, UserRoleType } from './type/user.service.interface';
 import { UserService } from './user.service';
@@ -21,7 +21,10 @@ describe('UserService', () => {
   });
 
   beforeEach(async () => {
+    await prismaRepository.schoolMember.deleteMany({});
+    await prismaRepository.school.deleteMany({});
     await prismaRepository.user.deleteMany({});
+    jest.restoreAllMocks();
   });
 
   describe('create', () => {
@@ -69,6 +72,41 @@ describe('UserService', () => {
 
       // then
       await expect(errorCase).rejects.toThrow(new InternalServerErrorException(ERROR.INTERNAL_SERVER_ERROR));
+    });
+  });
+
+  describe('findOne', () => {
+    it('유저를 찾았을 경우', async () => {
+      // given
+      const user = await prismaRepository.user.create({ data: { name: '홍길동', role: UserRoleType.STUDENT } });
+
+      // when
+      const result = await userService.findOne({ id: user.id });
+
+      // then
+      expect(result).toHaveProperty('id', user.id);
+      expect(result).toHaveProperty('name', user.name);
+      expect(result).toHaveProperty('role', user.role);
+    });
+
+    it('유저를 찾지 못했을 경우', async () => {
+      // when&then
+      const errorCase = userService.findOne({ id: 'notExistId' });
+
+      await expect(errorCase).rejects.toThrow(new NotFoundException(ERROR.USER_NOT_FOUND));
+    });
+
+    it('삭제된 유저인 경우', async () => {
+      // given
+      const user = await prismaRepository.user.create({
+        data: { name: '홍길동', role: UserRoleType.STUDENT, deletedAt: new Date() },
+      });
+
+      // when
+      const errorCase = userService.findOne({ id: user.id });
+
+      // then
+      await expect(errorCase).rejects.toThrow(new NotFoundException(ERROR.USER_NOT_FOUND));
     });
   });
 });

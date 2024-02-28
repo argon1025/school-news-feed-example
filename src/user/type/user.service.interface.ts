@@ -1,5 +1,3 @@
-import { UserRole } from '@prisma/client';
-
 export const USER_SERVICE = Symbol('USER_SERVICE');
 
 /**
@@ -24,9 +22,10 @@ export interface CreateResult {
   id: string;
 }
 
-/**
- * 유저 역할
- * - STUDENT 학생
- * - TEACHER 선생님
- */
-export type UserRoleType = UserRole;
+/** 유저 역할 */
+export enum UserRoleType {
+  /** 학생 */
+  STUDENT = 'STUDENT',
+  /** 선생님 */
+  TEACHER = 'TEACHER',
+}

@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaRepository } from '../common/prisma/prisma.repository';
-import { CreateOptions, USER_SERVICE } from './type/user.service.interface';
+import { CreateOptions, USER_SERVICE, UserRoleType } from './type/user.service.interface';
 import { UserService } from './user.service';
 import { PrismaModule } from '../common/prisma/prisma.module';
 import { ERROR } from '../common/exception/all-exception/error.constant';
@@ -29,7 +29,7 @@ describe('UserService', () => {
       // given
       const userCase: CreateOptions = {
         name: '홍길동',
-        role: 'STUDENT',
+        role: UserRoleType.STUDENT,
       };
 
       // when
@@ -39,13 +39,14 @@ describe('UserService', () => {
       const user = await prismaRepository.user.findUnique({ where: { id: result.id } });
       expect(user).toBeDefined();
       expect(user).toHaveProperty('name', '홍길동');
-      expect(user).toHaveProperty('role', 'STUDENT');
+      expect(user).toHaveProperty('role', UserRoleType.STUDENT);
     });
+
     it('선생님을 생성한 경우', async () => {
       // given
       const userCase: CreateOptions = {
         name: '김길동',
-        role: 'TEACHER',
+        role: UserRoleType.TEACHER,
       };
 
       // when
@@ -55,15 +56,16 @@ describe('UserService', () => {
       const user = await prismaRepository.user.findUnique({ where: { id: result.id } });
       expect(user).toBeDefined();
       expect(user).toHaveProperty('name', '김길동');
-      expect(user).toHaveProperty('role', 'TEACHER');
+      expect(user).toHaveProperty('role', UserRoleType.TEACHER);
     });
+
     it('유저 생성에 실패한 경우', async () => {
       // given
       jest.spyOn(prismaRepository.user, 'create').mockRejectedValue(new Error('에러'));
       jest.spyOn(Logger, 'error').mockImplementation();
 
       // when
-      const errorCase = userService.create({ name: '홍길동', role: 'STUDENT' });
+      const errorCase = userService.create({ name: '홍길동', role: UserRoleType.STUDENT });
 
       // then
       await expect(errorCase).rejects.toThrow(new InternalServerErrorException(ERROR.INTERNAL_SERVER_ERROR));

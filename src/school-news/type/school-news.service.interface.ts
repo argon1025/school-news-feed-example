@@ -6,6 +6,9 @@ export const SCHOOL_NEWS_SERVICE = Symbol('SCHOOL_NEWS_SERVICE');
 export interface SchoolNewsServiceBase {
   /** 소식 생성 */
   create(options: CreateOptions): Promise<CreateResult>;
+
+  /** 소식 수정 */
+  update(options: UpdateOptions): Promise<UpdateResult>;
 }
 
 /** 소식 생성 옵션 */
@@ -22,6 +25,24 @@ export interface CreateOptions {
 
 /** 소식 생성 결과 */
 export interface CreateResult {
+  /** 소식 ID */
+  id: string;
+}
+
+/** 소식 수정 옵션 */
+export interface UpdateOptions {
+  /** 소식 아이디 */
+  id: string;
+  /** 유저 아아디 */
+  userId: string;
+  /** 제목 */
+  title?: string;
+  /** 내용 */
+  content?: string;
+}
+
+/** 소식 수정 결과 */
+export interface UpdateResult {
   /** 소식 ID */
   id: string;
 }

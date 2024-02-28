@@ -218,4 +218,196 @@ describe('SchoolNewsService', () => {
       expect(failCase).rejects.toThrow(new NotFoundException(ERROR.USER_NOT_FOUND));
     });
   });
+
+  describe('update', () => {
+    it('유효한 학교 관리자가 소식을 수정했을 경우', async () => {
+      // given
+      // 테스트 계정 생성
+      const user = await prismaRepository.user.create({
+        data: {
+          name: '홍길동',
+          role: UserRoleType.TEACHER,
+        },
+      });
+      // 테스트 학교 생성
+      const school = await prismaRepository.school.create({
+        data: {
+          name: '테스트학교',
+          region: SchoolRegionType.BUSAN,
+          schoolMemberList: {
+            create: {
+              userId: user.id,
+              nickname: '학교장홍길동',
+              role: SchoolUserRole.TEACHER,
+            },
+          },
+        },
+      });
+      // 테스트 소식 생성
+      const schoolMember = await prismaRepository.schoolMember.findFirst({ where: { userId: user.id } });
+      const schoolNews = await prismaRepository.schoolNews.create({
+        data: {
+          title: '테스트 소식',
+          content: '테스트 소식 내용',
+          schoolId: school.id,
+          schoolMemberId: schoolMember.id,
+        },
+      });
+
+      // when
+      const successCase = await schoolNewsService.update({
+        userId: user.id,
+        id: schoolNews.id,
+        title: '수정된 소식',
+        content: '수정된 소식 내용',
+      });
+
+      // then
+      const updatedSchoolNews = await prismaRepository.schoolNews.findUnique({
+        where: { id: successCase.id },
+      });
+      expect(updatedSchoolNews).toHaveProperty('title', '수정된 소식');
+      expect(updatedSchoolNews).toHaveProperty('content', '수정된 소식 내용');
+    });
+
+    it('소식을 수정할 권한이 없는경우', async () => {
+      // given
+      // 테스트 계정 생성
+      const [user, externalUser] = await prismaRepository.$transaction([
+        prismaRepository.user.create({
+          data: {
+            name: '홍길동',
+            role: UserRoleType.TEACHER,
+          },
+        }),
+        prismaRepository.user.create({
+          data: {
+            name: '학생김길동',
+            role: UserRoleType.STUDENT,
+          },
+        }),
+      ]);
+      // 테스트 학교 생성
+      const school = await prismaRepository.school.create({
+        data: {
+          name: '테스트학교',
+          region: SchoolRegionType.BUSAN,
+          schoolMemberList: {
+            createMany: {
+              data: [
+                {
+                  userId: user.id,
+                  nickname: '학교장홍길동',
+                  role: SchoolUserRole.TEACHER,
+                },
+                {
+                  userId: externalUser.id,
+                  nickname: '학생김길동',
+                  role: SchoolUserRole.STUDENT,
+                },
+              ],
+            },
+          },
+        },
+      });
+      // 테스트 소식 생성
+      const schoolMember = await prismaRepository.schoolMember.findFirst({ where: { userId: user.id } });
+      const schoolNews = await prismaRepository.schoolNews.create({
+        data: {
+          title: '테스트 소식',
+          content: '테스트 소식 내용',
+          schoolId: school.id,
+          schoolMemberId: schoolMember.id,
+        },
+      });
+
+      // when
+      // 외부인원이 소식을 수정할 경우
+      const failCase = schoolNewsService.update({
+        userId: externalUser.id,
+        id: schoolNews.id,
+        title: '수정된 소식',
+        content: '수정된 소식 내용',
+      });
+
+      // then
+      await expect(failCase).rejects.toThrow(new NotFoundException(ERROR.SCHOOL_PERMISSION_CHECK));
+    });
+    it('학교 멤버가 아닌데 소식을 수정했을 경우', async () => {
+      // given
+      // 테스트 계정 생성
+      const [user, externalUser] = await prismaRepository.$transaction([
+        prismaRepository.user.create({
+          data: {
+            name: '홍길동',
+            role: UserRoleType.TEACHER,
+          },
+        }),
+        prismaRepository.user.create({
+          data: {
+            name: '외부인원',
+            role: UserRoleType.TEACHER,
+          },
+        }),
+      ]);
+      // 테스트 학교 생성
+      const school = await prismaRepository.school.create({
+        data: {
+          name: '테스트학교',
+          region: SchoolRegionType.BUSAN,
+          schoolMemberList: {
+            create: {
+              userId: user.id,
+              nickname: '학교장홍길동',
+              role: SchoolUserRole.TEACHER,
+            },
+          },
+        },
+      });
+      // 테스트 소식 생성
+      const schoolMember = await prismaRepository.schoolMember.findFirst({ where: { userId: user.id } });
+      const schoolNews = await prismaRepository.schoolNews.create({
+        data: {
+          title: '테스트 소식',
+          content: '테스트 소식 내용',
+          schoolId: school.id,
+          schoolMemberId: schoolMember.id,
+        },
+      });
+
+      // when
+      // 외부인원이 소식을 수정할 경우
+      const failCase = schoolNewsService.update({
+        userId: externalUser.id,
+        id: schoolNews.id,
+        title: '수정된 소식',
+        content: '수정된 소식 내용',
+      });
+
+      // then
+      await expect(failCase).rejects.toThrow(new NotFoundException(ERROR.SCHOOL_MEMBER_NOT_FOUND));
+    });
+    it('존재하지 않는 소식을 수정할 경우', async () => {
+      // given
+      // 테스트 계정 생성
+      const user = await prismaRepository.user.create({
+        data: {
+          name: '홍길동',
+          role: UserRoleType.TEACHER,
+        },
+      });
+
+      // when
+      // 존재하지 않는 소식을 수정할 경우
+      const failCase = schoolNewsService.update({
+        userId: user.id,
+        id: 'not-exist-news-id',
+        title: '수정된 소식',
+        content: '수정된 소식 내용',
+      });
+
+      // then
+      await expect(failCase).rejects.toThrow(new NotFoundException(ERROR.SCHOOL_NEWS_NOT_FOUND));
+    });
+  });
 });

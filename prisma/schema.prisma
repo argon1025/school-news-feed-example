@@ -68,6 +68,7 @@ model School {
 
 // 학교 멤버 테이블
 // School --< SchoolMember >-- User
+// SchoolMember --< SchoolNews
 model SchoolMember {
   id        String         @id @default(uuid())
   schoolId  String
@@ -79,8 +80,9 @@ model SchoolMember {
   deletedAt DateTime?
 
   /// Relation Fields
-  userInfo   User   @relation(fields: [userId], references: [id])
-  schoolInfo School @relation(fields: [schoolId], references: [id])
+  userInfo       User         @relation(fields: [userId], references: [id])
+  schoolInfo     School       @relation(fields: [schoolId], references: [id])
+  schoolNewsList SchoolNews[]
   /// 조건부 인덱스 - schoolId, UserId가 deletedAt이 null인 경우에만 유니크 (ROW SQL로 작성됨 init_schema)
 }
 
@@ -93,15 +95,18 @@ enum SchoolUserRole {
 
 // 학교 소식 테이블
 // SchoolNews >-- School
+// SchoolNews >-- SchoolMember
 model SchoolNews {
-  id        String    @id @default(uuid())
-  schoolId  String
-  title     String
-  content   String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  id             String    @id @default(uuid())
+  schoolId       String
+  schoolMemberId String
+  title          String
+  content        String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
 
   /// Relation Fields
-  schoolInfo School @relation(fields: [schoolId], references: [id])
+  schoolInfo School       @relation(fields: [schoolId], references: [id])
+  writerInfo SchoolMember @relation(fields: [schoolMemberId], references: [id])
 }

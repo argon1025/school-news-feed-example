@@ -9,6 +9,9 @@ export interface SchoolNewsServiceBase {
 
   /** 소식 수정 */
   update(options: UpdateOptions): Promise<UpdateResult>;
+
+  /** 소식 삭제 */
+  delete(options: DeleteOptions): Promise<DeleteResult>;
 }
 
 /** 소식 생성 옵션 */
@@ -43,6 +46,20 @@ export interface UpdateOptions {
 
 /** 소식 수정 결과 */
 export interface UpdateResult {
+  /** 소식 ID */
+  id: string;
+}
+
+/** 소식 삭제 옵션 */
+export interface DeleteOptions {
+  /** 소식 아이디 */
+  id: string;
+  /** 유저 아이디 */
+  userId: string;
+}
+
+/** 소식 삭제 결과 */
+export interface DeleteResult {
   /** 소식 ID */
   id: string;
 }

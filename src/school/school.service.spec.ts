@@ -28,9 +28,12 @@ describe('SchoolService', () => {
   });
 
   beforeEach(async () => {
-    await prismaRepository.schoolMember.deleteMany({});
-    await prismaRepository.school.deleteMany({});
-    await prismaRepository.user.deleteMany({});
+    await prismaRepository.$transaction([
+      prismaRepository.schoolNews.deleteMany(),
+      prismaRepository.schoolMember.deleteMany(),
+      prismaRepository.school.deleteMany(),
+      prismaRepository.user.deleteMany(),
+    ]);
     jest.restoreAllMocks();
   });
 

@@ -55,11 +55,21 @@ export const ERROR: { [key: string]: ErrorObject } = {
     message: '학교 멤버를 찾을 수 없습니다',
     httpStatus: HttpStatus.NOT_FOUND,
   },
+
+  /**
+   * 학교 소식 에러
+   */
   // 소식을 작성할 권한이 없습니다
   SCHOOL_PERMISSION_CHECK: {
     code: 'SCHOOL_PERMISSION_CHECK',
     message: '소식을 작성할 권한이 없습니다',
     httpStatus: HttpStatus.FORBIDDEN,
+  },
+  // 소식을 찾을 수 없습니다
+  SCHOOL_NEWS_NOT_FOUND: {
+    code: 'SCHOOL_NEWS_NOT_FOUND',
+    message: '소식을 찾을 수 없습니다',
+    httpStatus: HttpStatus.NOT_FOUND,
   },
 };
 

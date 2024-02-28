@@ -1,8 +1,14 @@
-import { Injectable, Inject, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, Logger, ForbiddenException } from '@nestjs/common';
 import { SchoolUserRole } from '@prisma/client';
 import { PrismaRepository } from '../common/prisma/prisma.repository';
 import { USER_SERVICE, UserServiceBase } from '../user/type/user.service.interface';
-import { CreateOptions, CreateResult, SchoolNewsServiceBase } from './type/school-news.service.interface';
+import {
+  CreateOptions,
+  CreateResult,
+  SchoolNewsServiceBase,
+  UpdateOptions,
+  UpdateResult,
+} from './type/school-news.service.interface';
 import { ERROR } from '../common/exception/all-exception/error.constant';
 
 @Injectable()
@@ -36,7 +42,7 @@ export class SchoolNewsService implements SchoolNewsServiceBase {
     }
     // 소식을 작성할 권한이 있는지 확인
     if (schoolMember.role !== SchoolUserRole.TEACHER) {
-      throw new NotFoundException(ERROR.SCHOOL_PERMISSION_CHECK);
+      throw new ForbiddenException(ERROR.SCHOOL_PERMISSION_CHECK);
     }
 
     // 소식 생성
@@ -52,6 +58,48 @@ export class SchoolNewsService implements SchoolNewsServiceBase {
       return { id: result.id };
     } catch (error) {
       Logger.error('학교 소식 생성 실패', error, 'SchoolNewsService.create');
+      throw new NotFoundException(ERROR.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  /** 소식 수정 */
+  async update(options: UpdateOptions): Promise<UpdateResult> {
+    const { id, userId, title, content } = options;
+
+    // 유저 정보가 유효한지 확인
+    await this.userService.findOne({ id: userId });
+
+    // 소식이 유효한지 확인
+    const schoolNews = await this.prismaRepository.schoolNews.findUnique({ where: { id, deletedAt: null } });
+    if (!schoolNews) {
+      throw new NotFoundException(ERROR.SCHOOL_NEWS_NOT_FOUND);
+    }
+
+    // 멤버 정보가 유효한지 확인
+    const schoolMember = await this.prismaRepository.schoolMember.findFirst({
+      where: { userId, schoolId: schoolNews.schoolId, deletedAt: null },
+    });
+    // 학교에 속해 있는 멤버인지 확인
+    if (!schoolMember) {
+      throw new NotFoundException(ERROR.SCHOOL_MEMBER_NOT_FOUND);
+    }
+    // 소식을 수정할 권한이 있는지 확인
+    if (schoolMember.role !== SchoolUserRole.TEACHER) {
+      throw new ForbiddenException(ERROR.SCHOOL_PERMISSION_CHECK);
+    }
+
+    // 소식 수정
+    try {
+      const result = await this.prismaRepository.schoolNews.update({
+        where: { id },
+        data: {
+          ...(title && { title }),
+          ...(content && { content }),
+        },
+      });
+      return { id: result.id };
+    } catch (error) {
+      Logger.error('학교 소식 수정 실패', error, 'SchoolNewsService.update');
       throw new NotFoundException(ERROR.INTERNAL_SERVER_ERROR);
     }
   }

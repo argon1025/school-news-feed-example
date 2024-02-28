@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 뉴스피드 테이블
+// UserNewsFeed >-- User
+model UserNewsFeed {
+  id        String    @id @default(uuid())
+  /// 유저 아이디
+  userId    String
+  /// 컨텐츠 아이디
+  contentId String
+  /// 컨텐츠 타이틀
+  title     String
+  /// 컨텐츠 내용
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  /// Relation Fields
+  userInfo User @relation(fields: [userId], references: [id])
+}
+
+// 기능 구현을 위한 임시 유저 테이블
+// User --< SchoolMember >-- School
+// User --< UserNewsFeed
+model User {
+  id        String    @id @default(uuid())
+  /// 이메일
+  name      String
+  role      UserRole
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  /// Relation Fields
+  schoolMemberList SchoolMember[]
+  userNewsFeedList UserNewsFeed[]
+}
+
+enum UserRole {
+  /// 학생
+  STUDENT
+  /// 교사
+  TEACHER
+}
+
+// 학교 테이블
+// School --< SchoolMember >-- User
+model School {
+  id        String    @id @default(uuid())
+  name      String
+  region    String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  /// Relation Fields
+  schoolMemberList SchoolMember[]
+  schoolNewsList   SchoolNews[]
+}
+
+// 학교 멤버 테이블
+// School --< SchoolMember >-- User
+model SchoolMember {
+  id        String         @id @default(uuid())
+  schoolId  String
+  userId    String
+  nickname  String
+  role      SchoolUserRole
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  deletedAt DateTime?
+
+  /// Relation Fields
+  userInfo   User   @relation(fields: [userId], references: [id])
+  schoolInfo School @relation(fields: [schoolId], references: [id])
+  /// 조건부 인덱스 - schoolId, UserId가 deletedAt이 null인 경우에만 유니크 (ROW SQL로 작성됨 init_schema)
+}
+
+enum SchoolUserRole {
+  /// 학생
+  STUDENT
+  /// 교사
+  TEACHER
+}
+
+// 학교 소식 테이블
+// SchoolNews >-- School
+model SchoolNews {
+  id        String    @id @default(uuid())
+  schoolId  String
+  title     String
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  /// Relation Fields
+  schoolInfo School @relation(fields: [schoolId], references: [id])
+}

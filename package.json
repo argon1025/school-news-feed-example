@@ -21,6 +21,7 @@
     "docker-compose:test:down": "docker-compose -p school-news-feed-test -f docker-compose-test-env.yml down",
     "docker-compose:local:up": "docker-compose up -d",
     "prisma:migrate:local": "dotenv -e environments/.env.local -- pnpm exec prisma migrate dev",
+    "prisma:migrate:local:create-only": "dotenv -e environments/.env.local -- npx prisma migrate dev --create-only",
     "prisma:migrate:test": "dotenv -e environments/.env.test -- pnpm exec prisma migrate dev"
   },
   "dependencies": {
@@ -29,6 +30,7 @@
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/swagger": "^7.3.0",
+    "@prisma/client": "5.10.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "luxon": "^3.4.4",

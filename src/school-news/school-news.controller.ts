@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Inject, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
 import { SCHOOL_NEWS_SERVICE, SchoolNewsServiceBase } from './type/school-news.service.interface';
@@ -6,6 +6,7 @@ import { AddErrorObjectToSwagger, ERROR } from '../common/exception/all-exceptio
 import { CreateSchoolNewsRequest, CreateSchoolNewsResponse } from './dto/create-school-news.dto';
 import { PatchSchoolNewsRequest, PatchSchoolNewsResponse } from './dto/patch-school-news.dto';
 import { DeleteSchoolNewsRequest, DeleteSchoolNewsResponse } from './dto/delete-school-news.dto';
+import { GetSchoolNewsListRequest, GetSchoolNewsListResponse } from './dto/get-school-news-list.dto';
 
 @Controller('school')
 @ApiTags('학교-소식')
@@ -67,5 +68,16 @@ export class SchoolNewsController {
   async create(@Body() request: CreateSchoolNewsRequest, @Param('schoolId') schoolId: string) {
     const result = await this.schoolNewsService.create({ ...request, schoolId });
     return plainToInstance(CreateSchoolNewsResponse, { schoolNewsId: result.id });
+  }
+
+  @Get(':schoolId/news')
+  @ApiOperation({
+    summary: '학교 소식 리스트 조회',
+    description: '해당 학교의 소식 리스트를 조회합니다.',
+  })
+  @ApiParam({ name: 'schoolId', description: '학교 ID', example: '7f2023de-6c27-4e01-bb14-30c975315f6a' })
+  @AddErrorObjectToSwagger([ERROR.INTERNAL_SERVER_ERROR])
+  async getList(@Param('schoolId') schoolId: string, @Query() request: GetSchoolNewsListRequest) {
+    return plainToInstance(GetSchoolNewsListResponse, await this.schoolNewsService.getList({ ...request, schoolId }));
   }
 }

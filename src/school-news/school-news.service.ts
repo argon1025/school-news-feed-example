@@ -1,5 +1,4 @@
 import { Injectable, Inject, NotFoundException, Logger, ForbiddenException } from '@nestjs/common';
-import { SchoolUserRole } from '@prisma/client';
 import { DateTime } from 'luxon';
 import { PrismaRepository } from '../common/prisma/prisma.repository';
 import { USER_SERVICE, UserServiceBase } from '../user/type/user.service.interface';
@@ -8,6 +7,9 @@ import {
   CreateResult,
   DeleteOptions,
   DeleteResult,
+  GetListOptions,
+  GetListResult,
+  SchoolNewsRoleType,
   SchoolNewsServiceBase,
   UpdateOptions,
   UpdateResult,
@@ -21,6 +23,58 @@ export class SchoolNewsService implements SchoolNewsServiceBase {
     private readonly userService: UserServiceBase,
     private readonly prismaRepository: PrismaRepository,
   ) {}
+
+  /** 소식 리스트 조회 */
+  async getList(options: GetListOptions): Promise<GetListResult> {
+    const { schoolId, page, size } = options;
+
+    const whereQuery = {
+      schoolId,
+      deletedAt: null,
+      schoolInfo: { deletedAt: null },
+    };
+    const newsList = await this.prismaRepository.schoolNews.findMany({
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        schoolMemberId: true,
+        createdAt: true,
+        updatedAt: true,
+        writerInfo: {
+          select: {
+            id: true,
+            nickname: true,
+            userId: true,
+            role: true,
+          },
+        },
+      },
+      where: whereQuery,
+      skip: (page - 1) * size,
+      take: size,
+      orderBy: { createdAt: 'desc' },
+    });
+    const total = await this.prismaRepository.schoolNews.count({ where: whereQuery });
+
+    return {
+      total,
+      list: newsList.map((news) => ({
+        id: news.id,
+        title: news.title,
+        content: news.content,
+        schoolMemberId: news.schoolMemberId,
+        writerInfo: {
+          id: news.writerInfo.id,
+          nickname: news.writerInfo.nickname,
+          userId: news.writerInfo.userId,
+          role: SchoolNewsRoleType[news.writerInfo.role],
+        },
+        createdAt: DateTime.fromJSDate(news.createdAt, { zone: 'UTC' }).toISO(),
+        updatedAt: DateTime.fromJSDate(news.updatedAt, { zone: 'UTC' }).toISO(),
+      })),
+    };
+  }
 
   /** 소식 생성 */
   async create(options: CreateOptions): Promise<CreateResult> {
@@ -44,7 +98,7 @@ export class SchoolNewsService implements SchoolNewsServiceBase {
       throw new NotFoundException(ERROR.SCHOOL_MEMBER_NOT_FOUND);
     }
     // 소식을 작성할 권한이 있는지 확인
-    if (schoolMember.role !== SchoolUserRole.TEACHER) {
+    if (schoolMember.role !== SchoolNewsRoleType.TEACHER) {
       throw new ForbiddenException(ERROR.SCHOOL_PERMISSION_CHECK);
     }
 
@@ -87,7 +141,7 @@ export class SchoolNewsService implements SchoolNewsServiceBase {
       throw new NotFoundException(ERROR.SCHOOL_MEMBER_NOT_FOUND);
     }
     // 소식을 수정할 권한이 있는지 확인
-    if (schoolMember.role !== SchoolUserRole.TEACHER) {
+    if (schoolMember.role !== SchoolNewsRoleType.TEACHER) {
       throw new ForbiddenException(ERROR.SCHOOL_PERMISSION_CHECK);
     }
 
@@ -129,7 +183,7 @@ export class SchoolNewsService implements SchoolNewsServiceBase {
       throw new NotFoundException(ERROR.SCHOOL_MEMBER_NOT_FOUND);
     }
     // 소식을 수정할 권한이 있는지 확인
-    if (schoolMember.role !== SchoolUserRole.TEACHER) {
+    if (schoolMember.role !== SchoolNewsRoleType.TEACHER) {
       throw new ForbiddenException(ERROR.SCHOOL_PERMISSION_CHECK);
     }
 

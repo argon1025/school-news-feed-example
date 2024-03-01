@@ -87,11 +87,30 @@ export interface GetListResult {
     title: string;
     /** 내용 */
     content: string;
-    /** 학교 멤버 ID */
-    schoolMemberId: string;
+    /** 작성자 정보 */
+    writerInfo: {
+      /** 작성자 학교 멤버 아이디 */
+      id: string;
+      /** 작성자 유저 아이디 */
+      userId: string;
+      /** 작성자 학교 닉네임 */
+      nickname: string;
+      /** 작성자 학교 권한 */
+      role: SchoolNewsRoleType;
+    };
     createdAt: string;
     updatedAt: string;
   }[];
   /** 전체 개수 */
   total: number;
+}
+
+/**
+ * 학교 멤버 역할
+ */
+export enum SchoolNewsRoleType {
+  /** 선생님 */
+  TEACHER = 'TEACHER',
+  /** 학생 */
+  STUDENT = 'STUDENT',
 }

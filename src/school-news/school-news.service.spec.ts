@@ -1,6 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { SchoolUserRole } from '@prisma/client';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { DateTime } from 'luxon';
 import { PrismaModule } from '../common/prisma/prisma.module';
 import { PrismaRepository } from '../common/prisma/prisma.repository';
 import { USER_SERVICE, UserRoleType } from '../user/type/user.service.interface';
@@ -692,6 +693,9 @@ describe('SchoolNewsService', () => {
       expect(result.total).toBe(1);
       expect(result.list[0]).toHaveProperty('title', '테스트 소식');
       expect(result.list[0]).toHaveProperty('content', '테스트 소식 내용');
+      expect(result.list[0].writerInfo).toHaveProperty('userId', user.id);
+      expect(result.list[0].writerInfo).toHaveProperty('nickname', '학교장홍길동');
+      expect(result.list[0].writerInfo).toHaveProperty('role', SchoolUserRole.TEACHER);
     });
 
     it('학교 페이지가 삭제된 경우', async () => {
@@ -750,6 +754,71 @@ describe('SchoolNewsService', () => {
 
       // then
       expect(result.total).toBe(0);
+    });
+
+    it('소식이 여러개인 경우 최신순으로 정렬한다', async () => {
+      // given
+      // 테스트 계정 생성
+      const user = await prismaRepository.user.create({
+        data: {
+          name: '홍길동',
+          role: UserRoleType.TEACHER,
+        },
+      });
+      // 테스트 학교 생성
+      const school = await prismaRepository.school.create({
+        data: {
+          name: '테스트학교',
+          region: SchoolRegionType.BUSAN,
+          schoolMemberList: {
+            create: {
+              userId: user.id,
+              nickname: '학교장홍길동',
+              role: SchoolUserRole.TEACHER,
+            },
+          },
+        },
+      });
+      // 소식 생성
+      const schoolMember = await prismaRepository.schoolMember.findFirst({ where: { userId: user.id } });
+      await prismaRepository.schoolNews.createMany({
+        data: [
+          {
+            title: '세번째 소식',
+            content: '테스트 소식 내용',
+            schoolId: school.id,
+            schoolMemberId: schoolMember.id,
+            createdAt: DateTime.fromISO('2021-07-02T00:00:00').toJSDate(),
+          },
+          {
+            title: '첫번째 소식',
+            content: '테스트 소식 내용',
+            schoolId: school.id,
+            schoolMemberId: schoolMember.id,
+            createdAt: DateTime.fromISO('2021-07-01T00:00:00').toJSDate(),
+          },
+          {
+            title: '두번째 삭제된 소식',
+            content: '테스트 소식 내용',
+            schoolId: school.id,
+            schoolMemberId: schoolMember.id,
+            deletedAt: new Date(),
+            createdAt: DateTime.fromISO('2021-07-01T10:00:00').toJSDate(),
+          },
+        ],
+      });
+
+      // when
+      const result = await schoolNewsService.getList({
+        schoolId: school.id,
+        page: 1,
+        size: 10,
+      });
+
+      // then
+      expect(result.total).toBe(2);
+      expect(result.list[0]).toHaveProperty('title', '세번째 소식');
+      expect(result.list[1]).toHaveProperty('title', '첫번째 소식');
     });
   });
 });

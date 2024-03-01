@@ -1,5 +1,4 @@
 import { Injectable, Inject, NotFoundException, Logger, ForbiddenException } from '@nestjs/common';
-import { SchoolUserRole } from '@prisma/client';
 import { DateTime } from 'luxon';
 import { PrismaRepository } from '../common/prisma/prisma.repository';
 import { USER_SERVICE, UserServiceBase } from '../user/type/user.service.interface';
@@ -10,6 +9,7 @@ import {
   DeleteResult,
   GetListOptions,
   GetListResult,
+  SchoolNewsRoleType,
   SchoolNewsServiceBase,
   UpdateOptions,
   UpdateResult,
@@ -41,10 +41,19 @@ export class SchoolNewsService implements SchoolNewsServiceBase {
         schoolMemberId: true,
         createdAt: true,
         updatedAt: true,
+        writerInfo: {
+          select: {
+            id: true,
+            nickname: true,
+            userId: true,
+            role: true,
+          },
+        },
       },
       where: whereQuery,
       skip: (page - 1) * size,
       take: size,
+      orderBy: { createdAt: 'desc' },
     });
     const total = await this.prismaRepository.schoolNews.count({ where: whereQuery });
 
@@ -55,6 +64,12 @@ export class SchoolNewsService implements SchoolNewsServiceBase {
         title: news.title,
         content: news.content,
         schoolMemberId: news.schoolMemberId,
+        writerInfo: {
+          id: news.writerInfo.id,
+          nickname: news.writerInfo.nickname,
+          userId: news.writerInfo.userId,
+          role: SchoolNewsRoleType[news.writerInfo.role],
+        },
         createdAt: DateTime.fromJSDate(news.createdAt, { zone: 'UTC' }).toISO(),
         updatedAt: DateTime.fromJSDate(news.updatedAt, { zone: 'UTC' }).toISO(),
       })),
@@ -83,7 +98,7 @@ export class SchoolNewsService implements SchoolNewsServiceBase {
       throw new NotFoundException(ERROR.SCHOOL_MEMBER_NOT_FOUND);
     }
     // 소식을 작성할 권한이 있는지 확인
-    if (schoolMember.role !== SchoolUserRole.TEACHER) {
+    if (schoolMember.role !== SchoolNewsRoleType.TEACHER) {
       throw new ForbiddenException(ERROR.SCHOOL_PERMISSION_CHECK);
     }
 
@@ -126,7 +141,7 @@ export class SchoolNewsService implements SchoolNewsServiceBase {
       throw new NotFoundException(ERROR.SCHOOL_MEMBER_NOT_FOUND);
     }
     // 소식을 수정할 권한이 있는지 확인
-    if (schoolMember.role !== SchoolUserRole.TEACHER) {
+    if (schoolMember.role !== SchoolNewsRoleType.TEACHER) {
       throw new ForbiddenException(ERROR.SCHOOL_PERMISSION_CHECK);
     }
 
@@ -168,7 +183,7 @@ export class SchoolNewsService implements SchoolNewsServiceBase {
       throw new NotFoundException(ERROR.SCHOOL_MEMBER_NOT_FOUND);
     }
     // 소식을 수정할 권한이 있는지 확인
-    if (schoolMember.role !== SchoolUserRole.TEACHER) {
+    if (schoolMember.role !== SchoolNewsRoleType.TEACHER) {
       throw new ForbiddenException(ERROR.SCHOOL_PERMISSION_CHECK);
     }
 

@@ -645,4 +645,111 @@ describe('SchoolNewsService', () => {
       await expect(failCase).rejects.toThrow(new NotFoundException(ERROR.SCHOOL_NEWS_NOT_FOUND));
     });
   });
+
+  describe('getList', () => {
+    it('학교 소식 리스트 조회', async () => {
+      // given
+      // 테스트 계정 생성
+      const user = await prismaRepository.user.create({
+        data: {
+          name: '홍길동',
+          role: UserRoleType.TEACHER,
+        },
+      });
+      // 테스트 학교 생성
+      const school = await prismaRepository.school.create({
+        data: {
+          name: '테스트학교',
+          region: SchoolRegionType.BUSAN,
+          schoolMemberList: {
+            create: {
+              userId: user.id,
+              nickname: '학교장홍길동',
+              role: SchoolUserRole.TEACHER,
+            },
+          },
+        },
+      });
+      // 소식 생성
+      const schoolMember = await prismaRepository.schoolMember.findFirst({ where: { userId: user.id } });
+      await prismaRepository.schoolNews.create({
+        data: {
+          title: '테스트 소식',
+          content: '테스트 소식 내용',
+          schoolId: school.id,
+          schoolMemberId: schoolMember.id,
+        },
+      });
+
+      // when
+      const result = await schoolNewsService.getList({
+        schoolId: school.id,
+        page: 1,
+        size: 10,
+      });
+
+      // then
+      expect(result.total).toBe(1);
+      expect(result.list[0]).toHaveProperty('title', '테스트 소식');
+      expect(result.list[0]).toHaveProperty('content', '테스트 소식 내용');
+    });
+
+    it('학교 페이지가 삭제된 경우', async () => {
+      // given
+      // 테스트 계정 생성
+      const user = await prismaRepository.user.create({
+        data: {
+          name: '홍길동',
+          role: UserRoleType.TEACHER,
+        },
+      });
+      // 테스트 학교 생성
+      const school = await prismaRepository.school.create({
+        data: {
+          name: '테스트학교',
+          region: SchoolRegionType.BUSAN,
+          deletedAt: new Date(),
+          schoolMemberList: {
+            create: {
+              userId: user.id,
+              nickname: '학교장홍길동',
+              role: SchoolUserRole.TEACHER,
+            },
+          },
+        },
+      });
+      // 소식 생성
+      const schoolMember = await prismaRepository.schoolMember.findFirst({ where: { userId: user.id } });
+      await prismaRepository.schoolNews.create({
+        data: {
+          title: '테스트 소식',
+          content: '테스트 소식 내용',
+          schoolId: school.id,
+          schoolMemberId: schoolMember.id,
+        },
+      });
+
+      // when
+      const result = await schoolNewsService.getList({
+        schoolId: school.id,
+        page: 1,
+        size: 10,
+      });
+
+      // then
+      expect(result.total).toBe(0);
+    });
+
+    it('존재하지 않는 학교인 경우', async () => {
+      // given&when
+      const result = await schoolNewsService.getList({
+        schoolId: 'not-exist-school-id',
+        page: 1,
+        size: 10,
+      });
+
+      // then
+      expect(result.total).toBe(0);
+    });
+  });
 });

@@ -8,6 +8,8 @@ import {
   CreateResult,
   DeleteOptions,
   DeleteResult,
+  GetListOptions,
+  GetListResult,
   SchoolNewsServiceBase,
   UpdateOptions,
   UpdateResult,
@@ -21,6 +23,43 @@ export class SchoolNewsService implements SchoolNewsServiceBase {
     private readonly userService: UserServiceBase,
     private readonly prismaRepository: PrismaRepository,
   ) {}
+
+  /** 소식 리스트 조회 */
+  async getList(options: GetListOptions): Promise<GetListResult> {
+    const { schoolId, page, size } = options;
+
+    const whereQuery = {
+      schoolId,
+      deletedAt: null,
+      schoolInfo: { deletedAt: null },
+    };
+    const newsList = await this.prismaRepository.schoolNews.findMany({
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        schoolMemberId: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      where: whereQuery,
+      skip: (page - 1) * size,
+      take: size,
+    });
+    const total = await this.prismaRepository.schoolNews.count({ where: whereQuery });
+
+    return {
+      total,
+      list: newsList.map((news) => ({
+        id: news.id,
+        title: news.title,
+        content: news.content,
+        schoolMemberId: news.schoolMemberId,
+        createdAt: DateTime.fromJSDate(news.createdAt, { zone: 'UTC' }).toISO(),
+        updatedAt: DateTime.fromJSDate(news.updatedAt, { zone: 'UTC' }).toISO(),
+      })),
+    };
+  }
 
   /** 소식 생성 */
   async create(options: CreateOptions): Promise<CreateResult> {

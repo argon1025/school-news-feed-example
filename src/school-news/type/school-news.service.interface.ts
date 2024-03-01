@@ -12,6 +12,9 @@ export interface SchoolNewsServiceBase {
 
   /** 소식 삭제 */
   delete(options: DeleteOptions): Promise<DeleteResult>;
+
+  /** 소식 리스트 조회 */
+  getList(options: GetListOptions): Promise<GetListResult>;
 }
 
 /** 소식 생성 옵션 */
@@ -62,4 +65,33 @@ export interface DeleteOptions {
 export interface DeleteResult {
   /** 소식 ID */
   id: string;
+}
+
+/** 소식 조회 옵션 */
+export interface GetListOptions {
+  /** 학교 아이디 */
+  schoolId: string;
+  /** 페이지 */
+  page: number;
+  /** 페이지 크기 */
+  size: number;
+}
+
+/** 소식 조회 결과 */
+export interface GetListResult {
+  /** 소식 목록 */
+  list: {
+    /** 소식 아이디 */
+    id: string;
+    /** 제목 */
+    title: string;
+    /** 내용 */
+    content: string;
+    /** 학교 멤버 ID */
+    schoolMemberId: string;
+    createdAt: string;
+    updatedAt: string;
+  }[];
+  /** 전체 개수 */
+  total: number;
 }

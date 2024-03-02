@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { ForbiddenException, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaModule } from '../common/prisma/prisma.module';
 import { SchoolService } from './school.service';
 import { UserService } from '../user/user.service';
@@ -13,6 +14,7 @@ describe('SchoolService', () => {
   let userService: UserService;
   let schoolService: SchoolService;
   let prismaRepository: PrismaRepository;
+  const eventEmitter = { emit: jest.fn() };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -20,6 +22,7 @@ describe('SchoolService', () => {
       providers: [
         { provide: USER_SERVICE, useClass: UserService },
         { provide: SCHOOL_SERVICE, useClass: SchoolService },
+        { provide: EventEmitter2, useValue: eventEmitter },
       ],
     }).compile();
 
@@ -57,13 +60,9 @@ describe('SchoolService', () => {
       // then
       const school = await prismaRepository.school.findUnique({
         where: { id: successCase.id },
-        include: { schoolMemberList: true },
       });
       expect(school).toHaveProperty('name', '테스트학교');
       expect(school).toHaveProperty('region', SchoolRegionType.SEOUL);
-      expect(school.schoolMemberList).toHaveLength(1);
-      expect(school.schoolMemberList[0]).toHaveProperty('nickname', '학교장홍길동');
-      expect(school.schoolMemberList[0]).toHaveProperty('role', UserRoleType.TEACHER);
     });
 
     it('학생으로 학교를 생성한 경우', async () => {

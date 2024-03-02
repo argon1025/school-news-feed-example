@@ -1,4 +1,4 @@
-import { Body, Controller, Inject, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Inject, Param, Post } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
 import { SCHOOL_MEMBER_SERVICE, SchoolMemberServiceBase } from './type/school-member.interface';
@@ -12,6 +12,15 @@ export class SchoolMemberController {
     @Inject(SCHOOL_MEMBER_SERVICE)
     private readonly schoolMemberService: SchoolMemberServiceBase,
   ) {}
+
+  @Delete('member/:schoolMemberId')
+  @ApiOperation({ summary: '학교 구독 취소' })
+  @ApiParam({ name: 'schoolMemberId', description: '학교 구독 아이디', example: '91619bb0-8d40-4d6c-882b-92916ebf8c2d' })
+  @AddErrorObjectToSwagger([ERROR.INTERNAL_SERVER_ERROR, ERROR.INVALID_PARAMETER, ERROR.SCHOOL_MEMBER_NOT_FOUND])
+  async leave(@Param('schoolMemberId') schoolMemberId: string) {
+    const result = await this.schoolMemberService.leave({ schoolMemberId });
+    return plainToInstance(JoinSchoolMemberResponse, { schoolMemberId: result });
+  }
 
   @Post(':schoolId/member')
   @ApiOperation({ summary: '학교 구독' })

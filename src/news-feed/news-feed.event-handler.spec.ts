@@ -316,4 +316,59 @@ describe('NewsFeedEventHandler', () => {
       expect(newsFeed).toHaveLength(1);
     });
   });
+
+  describe('handleSchoolNewsDelete', () => {
+    it('학교 소식을 삭제할 경우 모든 학교 구독자의 뉴스피드에서 소식이 삭제된다.', async () => {
+      // given
+      // 학교 관리자와 학생 생성
+      const teacher = await prismaRepository.user.create({
+        data: {
+          name: '김길동',
+          role: 'TEACHER',
+        },
+      });
+      const student = await prismaRepository.user.create({
+        data: {
+          name: '홍길동',
+          role: 'STUDENT',
+        },
+      });
+      // 뉴스피드 생성
+      await prismaRepository.newsFeed.createMany({
+        data: [
+          {
+            userId: teacher.id,
+            contentType: 'SCHOOL_NEWS',
+            contentId: 'schoolNewsId',
+            title: '테스트 소식',
+            content: '테스트 소식 내용',
+          },
+          {
+            userId: student.id,
+            contentType: 'SCHOOL_NEWS',
+            contentId: 'schoolNewsId',
+            title: '테스트 소식',
+            content: '테스트 소식 내용',
+          },
+        ],
+      });
+
+      // when
+      const eventPayload = {
+        eventType: SCHOOL_NEWS_EVENT.SCHOOL_NEWS_DELETE,
+        schoolNewsId: 'schoolNewsId',
+      };
+      await newsFeedEventHandler.handleSchoolNewsDelete(eventPayload);
+
+      // then
+      const result = await prismaRepository.newsFeed.findMany({
+        where: {
+          contentId: 'schoolNewsId',
+        },
+      });
+
+      expect(result[0].deletedAt).not.toBeNull();
+      expect(result[1].deletedAt).not.toBeNull();
+    });
+  });
 });

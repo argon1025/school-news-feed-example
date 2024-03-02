@@ -1,7 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
+import { DateTime } from 'luxon';
 import { PrismaRepository } from '../common/prisma/prisma.repository';
-import { CreateSchoolNewsEventPayload, SCHOOL_NEWS_EVENT } from '../school-news/type/school-news-event.type';
+import {
+  CreateSchoolNewsEventPayload,
+  DeleteSchoolNewsEventPayload,
+  SCHOOL_NEWS_EVENT,
+} from '../school-news/type/school-news-event.type';
 import { NewsFeedContentType } from '../common/type/common.type';
 
 @Injectable()
@@ -47,6 +52,20 @@ export class NewsFeedEventHandler {
     } catch (error) {
       Logger.error(`피드 생성 실패 schoolNewsId:${schoolNewsId}`, error, 'NewsFeedEventHandler.handleSchoolNewsCreate');
     }
+    return true;
+  }
+
+  /**
+   * 학교 소식 삭제 이벤트 핸들러
+   * - 학교 소식을 삭제할 경우 학교 구독자의 뉴스피드에서 소식이 삭제된다.
+   */
+  @OnEvent(SCHOOL_NEWS_EVENT.SCHOOL_NEWS_DELETE, { async: true })
+  async handleSchoolNewsDelete({ schoolNewsId }: DeleteSchoolNewsEventPayload) {
+    // 뉴스피드 삭제
+    await this.prismaRepository.newsFeed.updateMany({
+      where: { contentType: NewsFeedContentType.SCHOOL_NEWS, contentId: schoolNewsId },
+      data: { deletedAt: DateTime.utc().toJSDate() },
+    });
     return true;
   }
 }

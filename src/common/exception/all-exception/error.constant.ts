@@ -80,6 +80,11 @@ export const ERROR: { [key: string]: ErrorObject } = {
     message: '이미 가입된 멤버입니다',
     httpStatus: HttpStatus.BAD_REQUEST,
   },
+  MEMBER_NOT_FOUND: {
+    code: 'MEMBER_NOT_FOUND',
+    message: '멤버를 찾을 수 없습니다',
+    httpStatus: HttpStatus.NOT_FOUND,
+  },
 };
 
 export const isErrorObject = (obj: any): obj is ErrorObject => {

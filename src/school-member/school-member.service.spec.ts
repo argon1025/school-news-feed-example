@@ -190,4 +190,81 @@ describe('SchoolMemberService', () => {
       expect(schoolMember).toHaveProperty('role', SchoolMemberRoleType.TEACHER);
     });
   });
+
+  describe('leave', () => {
+    it('학교 구독을 취소하는 경우', async () => {
+      // given
+      // 테스트 유저 생성
+      const user = await prismaRepository.user.create({
+        data: {
+          name: '홍길동',
+          role: UserRoleType.TEACHER,
+        },
+      });
+      // 테스트 학교 생성 및 가입
+      await prismaRepository.school.create({
+        data: {
+          name: '테스트학교',
+          region: SchoolRegionType.BUSAN,
+          schoolMemberList: {
+            create: {
+              userId: user.id,
+              nickname: '학교장홍길동',
+              role: SchoolUserRole.TEACHER,
+            },
+          },
+        },
+      });
+      const schoolMember = await prismaRepository.schoolMember.findFirst({ where: { userId: user.id } });
+
+      // when
+      // 학교 구독 취소
+      await schoolMemberService.leave({ schoolMemberId: schoolMember.id });
+
+      // then
+      const exitSchoolMember = await prismaRepository.schoolMember.findFirst({ where: { userId: user.id } });
+      expect(exitSchoolMember.deletedAt).not.toBeNull();
+    });
+
+    it('이미 삭제된 학교이거나 존재하지 않은 상태인 경우', async () => {
+      // given&when
+      // 존재하지 않는 학교 구독 취소
+      const errorCase = schoolMemberService.leave({ schoolMemberId: 'not_exist_school_member_id' });
+
+      // then
+      await expect(errorCase).rejects.toThrow(new NotFoundException(ERROR.MEMBER_NOT_FOUND));
+    });
+    it('이미 구독을 취소했거나 구독하지 않은 상태인 경우', async () => {
+      // given
+      // 테스트 유저 생성
+      const user = await prismaRepository.user.create({
+        data: {
+          name: '홍길동',
+          role: UserRoleType.TEACHER,
+        },
+      });
+      // 테스트 학교 생성 및 가입
+      await prismaRepository.school.create({
+        data: {
+          name: '테스트학교',
+          region: SchoolRegionType.BUSAN,
+          schoolMemberList: {
+            create: {
+              userId: user.id,
+              nickname: '학교장홍길동',
+              role: SchoolUserRole.TEACHER,
+              deletedAt: new Date(),
+            },
+          },
+        },
+      });
+      const schoolMember = await prismaRepository.schoolMember.findFirst({ where: { userId: user.id } });
+
+      // when
+      const errorCase1 = schoolMemberService.leave({ schoolMemberId: schoolMember.id });
+
+      // then
+      await expect(errorCase1).rejects.toThrow(new NotFoundException(ERROR.MEMBER_NOT_FOUND));
+    });
+  });
 });

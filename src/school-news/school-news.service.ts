@@ -1,5 +1,6 @@
 import { Injectable, Inject, NotFoundException, Logger, ForbiddenException } from '@nestjs/common';
 import { DateTime } from 'luxon';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaRepository } from '../common/prisma/prisma.repository';
 import { USER_SERVICE, UserServiceBase } from '../user/type/user.service.interface';
 import {
@@ -15,6 +16,7 @@ import {
   UpdateResult,
 } from './type/school-news.service.interface';
 import { ERROR } from '../common/exception/all-exception/error.constant';
+import { CreateSchoolNewsEventPayload, SCHOOL_NEWS_EVENT, UpdateSchoolNewsEventPayload } from './type/school-news-event.type';
 
 @Injectable()
 export class SchoolNewsService implements SchoolNewsServiceBase {
@@ -22,6 +24,7 @@ export class SchoolNewsService implements SchoolNewsServiceBase {
     @Inject(USER_SERVICE)
     private readonly userService: UserServiceBase,
     private readonly prismaRepository: PrismaRepository,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   /** 소식 리스트 조회 */
@@ -103,6 +106,7 @@ export class SchoolNewsService implements SchoolNewsServiceBase {
     }
 
     // 소식 생성
+    let schoolNewsId: string;
     try {
       const result = await this.prismaRepository.schoolNews.create({
         data: {
@@ -112,11 +116,25 @@ export class SchoolNewsService implements SchoolNewsServiceBase {
           content,
         },
       });
-      return { id: result.id };
+      schoolNewsId = result.id;
     } catch (error) {
       Logger.error('학교 소식 생성 실패', error, 'SchoolNewsService.create');
       throw new NotFoundException(ERROR.INTERNAL_SERVER_ERROR);
     }
+
+    // 생성 이벤트 발행
+    try {
+      const payload: CreateSchoolNewsEventPayload = {
+        eventType: SCHOOL_NEWS_EVENT.SCHOOL_NEWS_CREATE,
+        schoolNewsId,
+      };
+      this.eventEmitter.emit(SCHOOL_NEWS_EVENT.SCHOOL_NEWS_CREATE, payload);
+    } catch (error) {
+      Logger.error('학교 소식 생성 이벤트 발행 실패', error, 'SchoolNewsService.create');
+      throw new NotFoundException(ERROR.INTERNAL_SERVER_ERROR);
+    }
+
+    return { id: schoolNewsId };
   }
 
   /** 소식 수정 */
@@ -146,6 +164,7 @@ export class SchoolNewsService implements SchoolNewsServiceBase {
     }
 
     // 소식 수정
+    let schoolNewsId: string;
     try {
       const result = await this.prismaRepository.schoolNews.update({
         where: { id },
@@ -154,11 +173,25 @@ export class SchoolNewsService implements SchoolNewsServiceBase {
           ...(content && { content }),
         },
       });
-      return { id: result.id };
+      schoolNewsId = result.id;
     } catch (error) {
       Logger.error('학교 소식 수정 실패', error, 'SchoolNewsService.update');
       throw new NotFoundException(ERROR.INTERNAL_SERVER_ERROR);
     }
+
+    // 수정 이벤트 발행
+    try {
+      const payload: UpdateSchoolNewsEventPayload = {
+        eventType: SCHOOL_NEWS_EVENT.SCHOOL_NEWS_UPDATE,
+        schoolNewsId,
+      };
+      this.eventEmitter.emit(SCHOOL_NEWS_EVENT.SCHOOL_NEWS_UPDATE, payload);
+    } catch (error) {
+      Logger.error('학교 소식 수정 이벤트 발행 실패', error, 'SchoolNewsService.update');
+      throw new NotFoundException(ERROR.INTERNAL_SERVER_ERROR);
+    }
+
+    return { id: schoolNewsId };
   }
 
   /** 소식 삭제 */
@@ -188,6 +221,7 @@ export class SchoolNewsService implements SchoolNewsServiceBase {
     }
 
     // 소식 삭제
+    let schoolNewsId: string;
     try {
       const result = await this.prismaRepository.schoolNews.update({
         where: { id },
@@ -195,10 +229,24 @@ export class SchoolNewsService implements SchoolNewsServiceBase {
           deletedAt: DateTime.utc().toJSDate(),
         },
       });
-      return { id: result.id };
+      schoolNewsId = result.id;
     } catch (error) {
       Logger.error('학교 소식 삭제 실패', error, 'SchoolNewsService.delete');
       throw new NotFoundException(ERROR.INTERNAL_SERVER_ERROR);
     }
+
+    // 삭제 이벤트 발행
+    try {
+      const payload: CreateSchoolNewsEventPayload = {
+        eventType: SCHOOL_NEWS_EVENT.SCHOOL_NEWS_DELETE,
+        schoolNewsId,
+      };
+      this.eventEmitter.emit(SCHOOL_NEWS_EVENT.SCHOOL_NEWS_DELETE, payload);
+    } catch (error) {
+      Logger.error('학교 소식 삭제 이벤트 발행 실패', error, 'SchoolNewsService.delete');
+      throw new NotFoundException(ERROR.INTERNAL_SERVER_ERROR);
+    }
+
+    return { id: schoolNewsId };
   }
 }

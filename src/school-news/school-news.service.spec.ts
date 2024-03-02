@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { SchoolUserRole } from '@prisma/client';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { DateTime } from 'luxon';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaModule } from '../common/prisma/prisma.module';
 import { PrismaRepository } from '../common/prisma/prisma.repository';
 import { USER_SERVICE } from '../user/type/user.service.interface';
@@ -14,6 +15,7 @@ import { UserRoleType, SchoolRegionType } from '../common/type/common.type';
 describe('SchoolNewsService', () => {
   let schoolNewsService: SchoolNewsService;
   let prismaRepository: PrismaRepository;
+  const eventEmitter = { emit: jest.fn() };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -21,6 +23,7 @@ describe('SchoolNewsService', () => {
       providers: [
         { provide: USER_SERVICE, useClass: UserService },
         { provide: SCHOOL_NEWS_SERVICE, useClass: SchoolNewsService },
+        { provide: EventEmitter2, useValue: eventEmitter },
       ],
     }).compile();
 

@@ -8,20 +8,22 @@ datasource db {
 }
 
 // 뉴스피드 테이블
-// UserNewsFeed >-- User
-model UserNewsFeed {
-  id        String    @id @default(uuid())
-  /// 유저 아이디
-  userId    String
+// NewsFeed >-- User
+model NewsFeed {
+  id          String    @id @default(uuid())
+  /// 컨텐츠 타입
+  contentType String
   /// 컨텐츠 아이디
-  contentId String
+  contentId   String
+  /// 유저 아이디
+  userId      String
   /// 컨텐츠 타이틀
-  title     String
+  title       String
   /// 컨텐츠 내용
-  content   String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
+  content     String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 
   /// Relation Fields
   userInfo User @relation(fields: [userId], references: [id])
@@ -29,7 +31,7 @@ model UserNewsFeed {
 
 // 기능 구현을 위한 임시 유저 테이블
 // User --< SchoolMember >-- School
-// User --< UserNewsFeed
+// User --< NewsFeed
 model User {
   id        String    @id @default(uuid())
   /// 이메일
@@ -41,7 +43,7 @@ model User {
 
   /// Relation Fields
   schoolMemberList SchoolMember[]
-  userNewsFeedList UserNewsFeed[]
+  newsFeedList     NewsFeed[]
 }
 
 enum UserRole {

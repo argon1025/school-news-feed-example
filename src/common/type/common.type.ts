@@ -53,3 +53,9 @@ export enum SchoolRegionType {
   /** 제주 */
   JEJU = 'JEJU',
 }
+
+/** 뉴스피드 컨텐츠 타입 */
+export enum NewsFeedContentType {
+  /** 학교 소식 */
+  SCHOOL_NEWS = 'SCHOOL_NEWS',
+}

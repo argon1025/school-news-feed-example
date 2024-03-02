@@ -2,7 +2,12 @@ import { Test } from '@nestjs/testing';
 import { PrismaModule } from '../common/prisma/prisma.module';
 import { PrismaRepository } from '../common/prisma/prisma.repository';
 import { NewsFeedEventHandler } from './news-feed.event-handler';
-import { CreateSchoolNewsEventPayload, SCHOOL_NEWS_EVENT } from '../school-news/type/school-news-event.type';
+import {
+  CreateSchoolNewsEventPayload,
+  SCHOOL_NEWS_EVENT,
+  UpdateSchoolNewsEventPayload,
+} from '../school-news/type/school-news-event.type';
+import { NewsFeedContentType } from '../common/type/common.type';
 
 describe('NewsFeedEventHandler', () => {
   let newsFeedEventHandler: NewsFeedEventHandler;
@@ -369,6 +374,100 @@ describe('NewsFeedEventHandler', () => {
 
       expect(result[0].deletedAt).not.toBeNull();
       expect(result[1].deletedAt).not.toBeNull();
+    });
+  });
+
+  describe('handleSchoolNewsUpdate', () => {
+    it('학교 소식을 수정할 경우 모든 학교 구독자의 뉴스피드에 소식이 수정된다.', async () => {
+      // given
+      // 학교 관리자와 학생 생성
+      const teacher = await prismaRepository.user.create({
+        data: {
+          name: '김길동',
+          role: 'TEACHER',
+        },
+      });
+      const student = await prismaRepository.user.create({
+        data: {
+          name: '홍길동',
+          role: 'STUDENT',
+        },
+      });
+      // 테스트 학교 생성 및 구독 추가
+      const school = await prismaRepository.school.create({
+        data: {
+          name: '테스트학교',
+          region: 'BUSAN',
+          schoolMemberList: {
+            createMany: {
+              data: [
+                {
+                  userId: teacher.id,
+                  nickname: '테스트학교 관리자',
+                  role: 'TEACHER',
+                },
+                {
+                  userId: student.id,
+                  nickname: '테스트학교 학생',
+                  role: 'STUDENT',
+                },
+              ],
+            },
+          },
+        },
+      });
+      const teacherSchoolMember = await prismaRepository.schoolMember.findFirst({
+        where: {
+          userId: teacher.id,
+        },
+      });
+      // 테스트 소식 생성
+      const schoolNews = await prismaRepository.schoolNews.create({
+        data: {
+          schoolId: school.id,
+          schoolMemberId: teacherSchoolMember.id,
+          title: '수정된 테스트 소식',
+          content: '수정된 테스트 소식 내용',
+        },
+      });
+      // 뉴스피드 생성
+      await prismaRepository.newsFeed.createMany({
+        data: [
+          {
+            userId: teacher.id,
+            contentType: NewsFeedContentType.SCHOOL_NEWS,
+            contentId: schoolNews.id,
+            title: '이전 테스트 소식',
+            content: '이전 테스트 소식 내용',
+          },
+          {
+            userId: student.id,
+            contentType: NewsFeedContentType.SCHOOL_NEWS,
+            contentId: schoolNews.id,
+            title: '이전 테스트 소식',
+            content: '이전 테스트 소식 내용',
+          },
+        ],
+      });
+
+      // when
+      const eventPayload: UpdateSchoolNewsEventPayload = {
+        eventType: SCHOOL_NEWS_EVENT.SCHOOL_NEWS_UPDATE,
+        schoolNewsId: schoolNews.id,
+      };
+      await newsFeedEventHandler.handleSchoolNewsUpdate(eventPayload);
+
+      // then
+      const newsFeedResult = await prismaRepository.newsFeed.findMany({
+        where: {
+          contentType: 'SCHOOL_NEWS',
+          contentId: schoolNews.id,
+        },
+      });
+      expect(newsFeedResult[0].title).toBe('수정된 테스트 소식');
+      expect(newsFeedResult[1].title).toBe('수정된 테스트 소식');
+      expect(newsFeedResult[0].content).toBe('수정된 테스트 소식 내용');
+      expect(newsFeedResult[1].content).toBe('수정된 테스트 소식 내용');
     });
   });
 });

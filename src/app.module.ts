@@ -9,6 +9,7 @@ import GenerateValidationException from './common/exception/validation-exception
 import { UserModule } from './user/user.module';
 import { SchoolModule } from './school/school.module';
 import { SchoolNewsModule } from './school-news/school-news.module';
+import { SchoolMemberModule } from './school-member/school-member.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { SchoolNewsModule } from './school-news/school-news.module';
     UserModule,
     SchoolModule,
     SchoolNewsModule,
+    SchoolMemberModule,
   ],
   controllers: [AppController],
   providers: [

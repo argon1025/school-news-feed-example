@@ -1,9 +1,11 @@
 import { ForbiddenException, Inject, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { CreateOptions, CreateResult, SchoolServiceBase } from './type/school.service.interface';
 import { PrismaRepository } from '../common/prisma/prisma.repository';
 import { USER_SERVICE, UserServiceBase } from '../user/type/user.service.interface';
 import { ERROR } from '../common/exception/all-exception/error.constant';
-import { SchoolMemberRoleType, UserRoleType } from '../common/type/common.type';
+import { UserRoleType } from '../common/type/common.type';
+import { CreateSchoolEventPayload, SCHOOL_EVENT } from './type/school-event.type';
 
 @Injectable()
 export class SchoolService implements SchoolServiceBase {
@@ -11,8 +13,10 @@ export class SchoolService implements SchoolServiceBase {
     @Inject(USER_SERVICE)
     private readonly userService: UserServiceBase,
     private readonly prismaRepository: PrismaRepository,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
+  /** 학교 페이지 생성 */
   async create(options: CreateOptions): Promise<CreateResult> {
     const { userId, name, region, nickname } = options;
 
@@ -24,24 +28,35 @@ export class SchoolService implements SchoolServiceBase {
     }
 
     // 학교 생성 & 관리자 등록
+    let schoolId = '';
     try {
       const result = await this.prismaRepository.school.create({
         data: {
           name,
           region,
-          schoolMemberList: {
-            create: {
-              userId,
-              nickname,
-              role: SchoolMemberRoleType.TEACHER,
-            },
-          },
         },
       });
-      return { id: result.id };
+      schoolId = result.id;
     } catch (error) {
       Logger.error('학교 생성 실패', error, 'SchoolService.create');
       throw new InternalServerErrorException(ERROR.INTERNAL_SERVER_ERROR);
     }
+
+    // 생성 이벤트 발행
+    try {
+      const payload: CreateSchoolEventPayload = {
+        eventType: SCHOOL_EVENT.SCHOOL_CREATE,
+        userId,
+        schoolId,
+        nickname,
+      };
+
+      this.eventEmitter.emit(SCHOOL_EVENT.SCHOOL_CREATE, payload);
+    } catch (error) {
+      Logger.error('학교 생성 이벤트 발행 실패', error, 'SchoolService.create');
+      throw new InternalServerErrorException(ERROR.INTERNAL_SERVER_ERROR);
+    }
+
+    return { id: schoolId };
   }
 }

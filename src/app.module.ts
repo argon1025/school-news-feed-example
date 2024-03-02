@@ -1,6 +1,7 @@
 import { ClassSerializerInterceptor, MiddlewareConsumer, Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HttpLoggerMiddleware } from './common/middleware/http-logger/http-logger.middleware';
@@ -21,6 +22,7 @@ import { SchoolMemberModule } from './school-member/school-member.module';
     SchoolModule,
     SchoolNewsModule,
     SchoolMemberModule,
+    EventEmitterModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [

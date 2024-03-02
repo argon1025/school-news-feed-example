@@ -1,9 +1,18 @@
 import { BadRequestException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { DateTime } from 'luxon';
-import { JoinOptions, JoinResult, LeaveOptions, LeaveResult, SchoolMemberServiceBase } from './type/school-member.interface';
+import {
+  GetListOptions,
+  GetListResult,
+  JoinOptions,
+  JoinResult,
+  LeaveOptions,
+  LeaveResult,
+  SchoolMemberServiceBase,
+} from './type/school-member.interface';
 import { PrismaRepository } from '../common/prisma/prisma.repository';
 import { ERROR } from '../common/exception/all-exception/error.constant';
 import { USER_SERVICE, UserServiceBase } from '../user/type/user.service.interface';
+import { SchoolMemberRoleType } from '../common/type/common.type';
 
 @Injectable()
 export class SchoolMemberService implements SchoolMemberServiceBase {
@@ -77,5 +86,49 @@ export class SchoolMemberService implements SchoolMemberServiceBase {
       Logger.error('학교 멤버 구독 해지 실패', error, 'SchoolMemberService.leave');
       throw new InternalServerErrorException(ERROR.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  /** 구독중인 학교 리스트 조회 */
+  async getList(options: GetListOptions): Promise<GetListResult> {
+    const { userId, page, size } = options;
+
+    const whereQuery = {
+      userId,
+      deletedAt: null,
+      schoolInfo: { deletedAt: null },
+    };
+    const list = await this.prismaRepository.schoolMember.findMany({
+      select: {
+        id: true,
+        schoolId: true,
+        role: true,
+        nickname: true,
+        createdAt: true,
+        schoolInfo: {
+          select: {
+            name: true,
+            region: true,
+          },
+        },
+      },
+      where: whereQuery,
+      take: size,
+      skip: (page - 1) * size,
+      orderBy: { createdAt: 'desc' },
+    });
+    const total = await this.prismaRepository.schoolMember.count({ where: whereQuery });
+
+    return {
+      total,
+      list: list.map(({ schoolInfo, ...memberInfo }) => ({
+        schoolMemberId: memberInfo.id,
+        schoolId: memberInfo.schoolId,
+        schoolName: schoolInfo.name,
+        region: schoolInfo.region,
+        role: SchoolMemberRoleType[memberInfo.role],
+        nickname: memberInfo.nickname,
+        createdAt: DateTime.fromJSDate(memberInfo.createdAt, { zone: 'UTC' }).toISO(),
+      })),
+    };
   }
 }

@@ -11,6 +11,7 @@ import { UserModule } from './user/user.module';
 import { SchoolModule } from './school/school.module';
 import { SchoolNewsModule } from './school-news/school-news.module';
 import { SchoolMemberModule } from './school-member/school-member.module';
+import { NewsFeedModule } from './news-feed/news-feed.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { SchoolMemberModule } from './school-member/school-member.module';
     SchoolModule,
     SchoolNewsModule,
     SchoolMemberModule,
+    NewsFeedModule,
     EventEmitterModule.forRoot(),
   ],
   controllers: [AppController],

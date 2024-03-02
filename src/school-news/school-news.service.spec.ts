@@ -36,6 +36,7 @@ describe('SchoolNewsService', () => {
       prismaRepository.schoolNews.deleteMany(),
       prismaRepository.schoolMember.deleteMany(),
       prismaRepository.school.deleteMany(),
+      prismaRepository.newsFeed.deleteMany(),
       prismaRepository.user.deleteMany(),
     ]);
     jest.restoreAllMocks();

@@ -1,14 +1,8 @@
 import { Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import {
-  CreateOptions,
-  CreateResult,
-  FindOneOptions,
-  FindOneResult,
-  UserRoleType,
-  UserServiceBase,
-} from './type/user.service.interface';
+import { CreateOptions, CreateResult, FindOneOptions, FindOneResult, UserServiceBase } from './type/user.service.interface';
 import { PrismaRepository } from '../common/prisma/prisma.repository';
 import { ERROR } from '../common/exception/all-exception/error.constant';
+import { UserRoleType } from '../common/type/common.type';
 
 @Injectable()
 export class UserService implements UserServiceBase {

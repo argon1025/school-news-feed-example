@@ -1,10 +1,11 @@
 import { Test } from '@nestjs/testing';
 import { InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaRepository } from '../common/prisma/prisma.repository';
-import { CreateOptions, USER_SERVICE, UserRoleType } from './type/user.service.interface';
+import { CreateOptions, USER_SERVICE } from './type/user.service.interface';
 import { UserService } from './user.service';
 import { PrismaModule } from '../common/prisma/prisma.module';
 import { ERROR } from '../common/exception/all-exception/error.constant';
+import { UserRoleType } from '../common/type/common.type';
 
 describe('UserService', () => {
   let userService: UserService;

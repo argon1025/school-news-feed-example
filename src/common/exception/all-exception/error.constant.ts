@@ -71,6 +71,15 @@ export const ERROR: { [key: string]: ErrorObject } = {
     message: '소식을 찾을 수 없습니다',
     httpStatus: HttpStatus.NOT_FOUND,
   },
+
+  /**
+   * 학교 멤버 에러
+   */
+  ALREADY_JOINED: {
+    code: 'ALREADY_JOINED',
+    message: '이미 가입된 멤버입니다',
+    httpStatus: HttpStatus.BAD_REQUEST,
+  },
 };
 
 export const isErrorObject = (obj: any): obj is ErrorObject => {

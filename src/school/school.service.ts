@@ -1,8 +1,9 @@
 import { ForbiddenException, Inject, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
-import { CreateOptions, CreateResult, SchoolMemberRoleType, SchoolServiceBase } from './type/school.service.interface';
+import { CreateOptions, CreateResult, SchoolServiceBase } from './type/school.service.interface';
 import { PrismaRepository } from '../common/prisma/prisma.repository';
-import { USER_SERVICE, UserRoleType, UserServiceBase } from '../user/type/user.service.interface';
+import { USER_SERVICE, UserServiceBase } from '../user/type/user.service.interface';
 import { ERROR } from '../common/exception/all-exception/error.constant';
+import { SchoolMemberRoleType, UserRoleType } from '../common/type/common.type';
 
 @Injectable()
 export class SchoolService implements SchoolServiceBase {

@@ -1,6 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { SchoolUserRole } from '@prisma/client';
+import { DateTime } from 'luxon';
 import { SchoolMemberService } from './school-member.service';
 import { PrismaModule } from '../common/prisma/prisma.module';
 import { USER_SERVICE } from '../user/type/user.service.interface';
@@ -265,6 +266,135 @@ describe('SchoolMemberService', () => {
 
       // then
       await expect(errorCase1).rejects.toThrow(new NotFoundException(ERROR.MEMBER_NOT_FOUND));
+    });
+  });
+
+  describe('getList', () => {
+    it('학교 구독 리스트를 조회하는 경우', async () => {
+      // given
+      // 테스트 유저 생성
+      const user = await prismaRepository.user.create({
+        data: {
+          name: '홍길동',
+          role: UserRoleType.TEACHER,
+        },
+      });
+      // 테스트 학교 생성 및 가입
+      await prismaRepository.school.create({
+        data: {
+          name: '두번째 학교',
+          region: SchoolRegionType.BUSAN,
+          schoolMemberList: {
+            create: {
+              userId: user.id,
+              nickname: '학교장홍길동',
+              role: SchoolUserRole.TEACHER,
+              createdAt: DateTime.fromISO('2021-07-02T10:00:00').toJSDate(),
+            },
+          },
+        },
+      });
+      await prismaRepository.school.create({
+        data: {
+          name: '첫번째 학교',
+          region: SchoolRegionType.BUSAN,
+          schoolMemberList: {
+            create: {
+              userId: user.id,
+              nickname: '학교장홍길동',
+              role: SchoolUserRole.TEACHER,
+              createdAt: DateTime.fromISO('2021-07-02T15:00:00').toJSDate(),
+            },
+          },
+        },
+      });
+
+      // when
+      // 학교 구독 리스트 조회
+      const result = await schoolMemberService.getList({ userId: user.id, page: 1, size: 10 });
+
+      // then
+      expect(result).toHaveProperty('total', 2);
+      expect(result.list[0]).toHaveProperty('schoolName', '첫번째 학교');
+      expect(result.list[1]).toHaveProperty('schoolName', '두번째 학교');
+    });
+    it('삭제된 학교가 있는 경우', async () => {
+      // given
+      // 테스트 유저 생성
+      const user = await prismaRepository.user.create({
+        data: {
+          name: '홍길동',
+          role: UserRoleType.TEACHER,
+        },
+      });
+      // 테스트 학교 생성 및 가입
+      await prismaRepository.school.create({
+        data: {
+          name: '네번째 학교',
+          region: SchoolRegionType.BUSAN,
+          schoolMemberList: {
+            create: {
+              userId: user.id,
+              nickname: '학교장홍길동',
+              role: SchoolUserRole.TEACHER,
+              createdAt: DateTime.fromISO('2021-07-02T08:00:00').toJSDate(),
+            },
+          },
+        },
+      });
+      await prismaRepository.school.create({
+        data: {
+          name: '세번째 삭제된 학교',
+          region: SchoolRegionType.BUSAN,
+          deletedAt: new Date(),
+          schoolMemberList: {
+            create: {
+              userId: user.id,
+              nickname: '학교장홍길동',
+              role: SchoolUserRole.TEACHER,
+              createdAt: DateTime.fromISO('2021-07-02T09:00:00').toJSDate(),
+            },
+          },
+        },
+      });
+      await prismaRepository.school.create({
+        data: {
+          name: '두번째 구독 취소 학교',
+          region: SchoolRegionType.BUSAN,
+          schoolMemberList: {
+            create: {
+              userId: user.id,
+              nickname: '학교장홍길동',
+              role: SchoolUserRole.TEACHER,
+              createdAt: DateTime.fromISO('2021-07-02T10:00:00').toJSDate(),
+              deletedAt: new Date(),
+            },
+          },
+        },
+      });
+      await prismaRepository.school.create({
+        data: {
+          name: '첫번째 학교',
+          region: SchoolRegionType.BUSAN,
+          schoolMemberList: {
+            create: {
+              userId: user.id,
+              nickname: '학교장홍길동',
+              role: SchoolUserRole.TEACHER,
+              createdAt: DateTime.fromISO('2021-07-02T15:00:00').toJSDate(),
+            },
+          },
+        },
+      });
+
+      // when
+      // 학교 구독 리스트 조회
+      const result = await schoolMemberService.getList({ userId: user.id, page: 1, size: 10 });
+
+      // then
+      expect(result).toHaveProperty('total', 2);
+      expect(result.list[0]).toHaveProperty('schoolName', '첫번째 학교');
+      expect(result.list[1]).toHaveProperty('schoolName', '네번째 학교');
     });
   });
 });

@@ -1,9 +1,10 @@
-import { Body, Controller, Delete, Inject, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Inject, Param, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
 import { SCHOOL_MEMBER_SERVICE, SchoolMemberServiceBase } from './type/school-member.interface';
 import { AddErrorObjectToSwagger, ERROR } from '../common/exception/all-exception/error.constant';
 import { JoinSchoolMemberRequest, JoinSchoolMemberResponse } from './dto/join-school-member.dto';
+import { GetSchoolMemberListRequest, GetSchoolMemberListResponse } from './dto/get-school-member-list.dto';
 
 @Controller('school')
 @ApiTags('학교-구독')
@@ -12,6 +13,14 @@ export class SchoolMemberController {
     @Inject(SCHOOL_MEMBER_SERVICE)
     private readonly schoolMemberService: SchoolMemberServiceBase,
   ) {}
+
+  @Get('/member')
+  @ApiOperation({ summary: '학교 구독 리스트' })
+  @AddErrorObjectToSwagger([ERROR.INTERNAL_SERVER_ERROR, ERROR.INVALID_PARAMETER])
+  async getList(@Query() request: GetSchoolMemberListRequest) {
+    const result = await this.schoolMemberService.getList(request);
+    return plainToInstance(GetSchoolMemberListResponse, result);
+  }
 
   @Delete('member/:schoolMemberId')
   @ApiOperation({ summary: '학교 구독 취소' })

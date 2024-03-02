@@ -1,5 +1,6 @@
 import { BadRequestException, Inject, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import { JoinOptions, JoinResult, SchoolMemberServiceBase } from './type/school-member.interface';
+import { DateTime } from 'luxon';
+import { JoinOptions, JoinResult, LeaveOptions, LeaveResult, SchoolMemberServiceBase } from './type/school-member.interface';
 import { PrismaRepository } from '../common/prisma/prisma.repository';
 import { ERROR } from '../common/exception/all-exception/error.constant';
 import { USER_SERVICE, UserServiceBase } from '../user/type/user.service.interface';
@@ -11,6 +12,7 @@ export class SchoolMemberService implements SchoolMemberServiceBase {
     @Inject(USER_SERVICE) private readonly userService: UserServiceBase,
   ) {}
 
+  /** 학교 구독 */
   async join(options: JoinOptions): Promise<JoinResult> {
     const { userId, nickname, role, schoolId } = options;
 
@@ -46,6 +48,33 @@ export class SchoolMemberService implements SchoolMemberServiceBase {
       };
     } catch (error) {
       Logger.error('학교 멤버 구독 실패', error, 'SchoolMemberService.join');
+      throw new InternalServerErrorException(ERROR.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  /** 학교 구독 해지 */
+  async leave(options: LeaveOptions): Promise<LeaveResult> {
+    const { schoolMemberId } = options;
+
+    // 학교 멤버 조회
+    const schoolMember = await this.prismaRepository.schoolMember.findUnique({
+      where: { id: schoolMemberId, deletedAt: null },
+    });
+    if (!schoolMember) {
+      throw new NotFoundException(ERROR.MEMBER_NOT_FOUND);
+    }
+
+    // 학교 멤버 삭제
+    try {
+      const result = await this.prismaRepository.schoolMember.update({
+        where: { id: schoolMemberId },
+        data: { deletedAt: DateTime.utc().toJSDate() },
+      });
+      return {
+        schoolId: result.schoolId,
+      };
+    } catch (error) {
+      Logger.error('학교 멤버 구독 해지 실패', error, 'SchoolMemberService.leave');
       throw new InternalServerErrorException(ERROR.INTERNAL_SERVER_ERROR);
     }
   }

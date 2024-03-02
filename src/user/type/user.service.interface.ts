@@ -1,3 +1,5 @@
+import { UserRoleType } from '../../common/type/common.type';
+
 export const USER_SERVICE = Symbol('USER_SERVICE');
 
 /**
@@ -23,14 +25,6 @@ export interface CreateOptions {
 export interface CreateResult {
   /** 유저 ID */
   id: string;
-}
-
-/** 유저 역할 */
-export enum UserRoleType {
-  /** 학생 */
-  STUDENT = 'STUDENT',
-  /** 선생님 */
-  TEACHER = 'TEACHER',
 }
 
 /** 유저 조회 */

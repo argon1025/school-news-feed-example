@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsString, Length } from 'class-validator';
 import { Exclude, Expose } from 'class-transformer';
-import { SchoolRegionType } from '../type/school.service.interface';
+import { SchoolRegionType } from '../../common/type/common.type';
 
 export class CreateSchoolRequest {
   @IsString()

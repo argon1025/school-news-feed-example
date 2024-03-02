@@ -4,12 +4,12 @@ import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { PrismaModule } from '../common/prisma/prisma.module';
 import { PrismaRepository } from '../common/prisma/prisma.repository';
-import { USER_SERVICE, UserRoleType } from '../user/type/user.service.interface';
+import { USER_SERVICE } from '../user/type/user.service.interface';
 import { UserService } from '../user/user.service';
 import { SchoolNewsService } from './school-news.service';
 import { SCHOOL_NEWS_SERVICE } from './type/school-news.service.interface';
-import { SchoolRegionType } from '../school/type/school.service.interface';
 import { ERROR } from '../common/exception/all-exception/error.constant';
+import { UserRoleType, SchoolRegionType } from '../common/type/common.type';
 
 describe('SchoolNewsService', () => {
   let schoolNewsService: SchoolNewsService;

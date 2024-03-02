@@ -4,9 +4,10 @@ import { PrismaModule } from '../common/prisma/prisma.module';
 import { SchoolService } from './school.service';
 import { UserService } from '../user/user.service';
 import { PrismaRepository } from '../common/prisma/prisma.repository';
-import { USER_SERVICE, UserRoleType } from '../user/type/user.service.interface';
-import { SCHOOL_SERVICE, SchoolRegionType } from './type/school.service.interface';
+import { USER_SERVICE } from '../user/type/user.service.interface';
+import { SCHOOL_SERVICE } from './type/school.service.interface';
 import { ERROR } from '../common/exception/all-exception/error.constant';
+import { SchoolRegionType, UserRoleType } from '../common/type/common.type';
 
 describe('SchoolService', () => {
   let userService: UserService;

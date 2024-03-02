@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsString } from 'class-validator';
 import { Exclude, Expose } from 'class-transformer';
-import { UserRoleType } from '../type/user.service.interface';
+import { UserRoleType } from '../../common/type/common.type';
 
 export class CreateUserRequest {
   @IsString()

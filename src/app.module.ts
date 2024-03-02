@@ -2,8 +2,6 @@ import { ClassSerializerInterceptor, MiddlewareConsumer, Module, ValidationPipe 
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { HttpLoggerMiddleware } from './common/middleware/http-logger/http-logger.middleware';
 import { AllExceptionFilter } from './common/exception/all-exception/all-exception.filter';
 import GenerateValidationException from './common/exception/validation-exception/validation-exception.factory';
@@ -26,9 +24,7 @@ import { NewsFeedModule } from './news-feed/news-feed.module';
     SchoolMemberModule,
     EventEmitterModule.forRoot(),
   ],
-  controllers: [AppController],
   providers: [
-    AppService,
     {
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,

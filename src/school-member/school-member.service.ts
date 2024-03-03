@@ -63,11 +63,11 @@ export class SchoolMemberService implements SchoolMemberServiceBase {
 
   /** 학교 구독 해지 */
   async leave(options: LeaveOptions): Promise<LeaveResult> {
-    const { schoolMemberId } = options;
+    const { userId, schoolId } = options;
 
     // 학교 멤버 조회
-    const schoolMember = await this.prismaRepository.schoolMember.findUnique({
-      where: { id: schoolMemberId, deletedAt: null },
+    const schoolMember = await this.prismaRepository.schoolMember.findFirst({
+      where: { userId, schoolId, deletedAt: null },
     });
     if (!schoolMember) {
       throw new NotFoundException(ERROR.MEMBER_NOT_FOUND);
@@ -76,7 +76,7 @@ export class SchoolMemberService implements SchoolMemberServiceBase {
     // 학교 멤버 삭제
     try {
       const result = await this.prismaRepository.schoolMember.update({
-        where: { id: schoolMemberId },
+        where: { id: schoolMember.id },
         data: { deletedAt: DateTime.utc().toJSDate() },
       });
       return {

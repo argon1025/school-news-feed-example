@@ -1,5 +1,26 @@
 # School News Feed Example
 
+## ToC
+
+- [Introduce](#introduce)
+- [Built With](#built-with)
+- [Architecture](#architecture)
+  - 폴더 구조
+  - ERD
+- [Convention](#convention)
+  - 이슈 관리
+  - Git
+  - 코드 컨벤션
+- [How To Start](#how-to-start)
+  - 1. Docker-compose 로컬 개발환경 구성
+  - 2. NodeJS 버전 확인
+  - 3. 패키지 설치
+  - 4. 환경설정 구성
+  - 5. Prisma Client 생성
+  - 6. 프로젝트 시작
+  - (참고) Swagger
+  - (참고) 테스트 시작
+
 ## Introduce
 
 학교 소식을 전달하고 받아보는 뉴스피드 기능 예제

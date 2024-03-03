@@ -40,8 +40,10 @@ export interface JoinResult {
 
 /** 학교 구독 해지 */
 export interface LeaveOptions {
-  /** 멤버 아이디 */
-  schoolMemberId: string;
+  /** 학교 아이디 */
+  schoolId: string;
+  /** 유저 아이디 */
+  userId: string;
 }
 
 /** 학교 구독 해지 결과 */

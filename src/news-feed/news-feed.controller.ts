@@ -1,5 +1,5 @@
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
 import { NEWS_FEED_SERVICE, NewsFeedServiceBase } from './type/news-feed.service.interface';
 import { AddErrorObjectToSwagger, ERROR } from '../common/exception/all-exception/error.constant';
@@ -14,6 +14,8 @@ export class NewsFeedController {
   ) {}
 
   @Get('user/:userId/news-feed')
+  @ApiOperation({ summary: '뉴스피드 리스트 조회' })
+  @ApiParam({ name: 'userId', description: '사용자 아이디' })
   @AddErrorObjectToSwagger([ERROR.INTERNAL_SERVER_ERROR])
   async getList(@Param('userId') userId: string, @Query() request: GetNewsFeedListRequest) {
     const result = await this.newsFeedService.getList({ ...request, userId });
